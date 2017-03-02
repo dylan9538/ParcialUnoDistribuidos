@@ -156,8 +156,85 @@ http {
  service iptables save
  service iptables restart
 ```
-**Finalmente iniciamos corriendo nginx**
+**Finalmente iniciamos nginx**
 
 ```
 service nginx start
 ```
+
+Luego de ejecutar el comando anterior probamos en el browser si nuestro balanceador de carga esta funcionando digitando la ip del balanceador y el puerto 8080. 
+
+##AUTOMATIZACIÓN DE INFRAESTRUCTURA
+
+**Vagrantfile**
+
+Para esta etapa se procede a explicar la creación y especificación del documento Vagrantfile. Dentro del directorio parcialUnoDistribuidos procedemos a crear el archivo con el nombre Vagrantfile y agregamos el siguiente texto:
+
+```
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+VAGRANTFILE_API_VERSION = "2"
+
+Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+  config.ssh.insert_key = false
+  config.vm.define :centos_web do |web|
+    web.vm.box = "centos64u"
+    web.vm.network "private_network", ip: "192.168.33.20"
+    web.vm.network "public_network", bridge: "enp5s0", ip: "192.168.131.93"
+    web.vm.provider :virtualbox do |vb|
+      vb.customize ["modifyvm", :id, "--memory", "1024","--cpus", "1", "--name", "centos-web-uno" ]
+    end
+    config.vm.provision :chef_solo do |chef|
+      chef.cookbooks_path = "cookbooks"
+      chef.add_recipe "web"
+    end
+  end
+
+  config.vm.define :centos_web2 do |web|
+    web.vm.box = "centos64u"
+    web.vm.network "private_network", ip: "192.168.33.21"
+    web.vm.network "public_network", bridge: "enp5s0", ip: "192.168.131.94"
+    web.vm.provider :virtualbox do |vb|
+      vb.customize ["modifyvm", :id, "--memory", "1024","--cpus", "1", "--name", "centos-web-dos" ]
+    end
+    config.vm.provision :chef_solo do |chef|
+      chef.cookbooks_path = "cookbooks"
+      chef.add_recipe "web"
+    end
+  end
+
+config.vm.define :centos_balancer do |ba|
+    ba.vm.box = "centos64"
+    ba.vm.network "private_network", ip: "192.168.33.22"
+    ba.vm.network "public_network", bridge: "enp5s0", ip: "192.168.131.95"
+    ba.vm.provider :virtualbox do |vb|
+      vb.customize ["modifyvm", :id, "--memory", "1024","--cpus", "1", "--name", "centos-balanceador" ]
+    end
+    config.vm.provision :chef_solo do |chef|
+      chef.cookbooks_path = "cookbooks"
+      chef.add_recipe "balancer"
+    end
+  end
+
+config.vm.define :centos_db do |db|
+    db.vm.box = "centos64u"
+    db.vm.network "private_network", ip: "192.168.33.23"
+    db.vm.network "public_network", bridge: "enp5s0", ip: "192.168.131.96"
+    db.vm.provider :virtualbox do |vb|
+      vb.customize ["modifyvm", :id, "--memory", "1024","--cpus", "1", "--name", "centos-database" ]
+    end
+    config.vm.provision :chef_solo do |chef|
+      chef.cookbooks_path = "cookbooks"
+      chef.add_recipe "db"
+    end
+  end
+end
+```
+
+Dentro de este archivo especificamos todo el aprovisionamiento con lo siguiente:
+- Maquinas a aprovisionar
+- Interfaces solo anfitrión
+- Interfaces tipo puente
+- Declaración de cookbooks
+- Variables necesarias para plantillas 
