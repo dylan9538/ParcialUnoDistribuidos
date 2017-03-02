@@ -23,9 +23,10 @@ Dylan Torres | A00265772
 ### Problema
 Se necesita realizar	el	aprovisionamiento	de	un	ambiente	compuesto	por:
 
-Un servidor	encargado de realizar balanceo de	carga
-Dos	servidores	web	
-Un servidor de base de datos
+- Un servidor	encargado de realizar balanceo de	carga.
+- Dos	servidores	web	
+- Un servidor de base de datos
+
 Se	debe probar	el	funcionamiento	del balanceador	a través	de	una	aplicación	web	que realice	 consultas	 a	 la	 base	 de	 datos	 a	 través	 de	 los servidores	 web (mostrar visualmente cual	servidor web atiende la	petición).
 
 ##Pasos preliminares
@@ -53,11 +54,11 @@ En este repositorio añadiremos los archivos que se manejen.
 git clone https://github.com/dylan9538/parcialUnoDistribuidos.git
 cd parcialUnoDistribuidos
 
-git config remote.origin.url "https://ad7e9708b29765e8e4840c1016e469ba56595e71@github.com/dylan9538/parcialUnoDistribuidos.git"
+git config remote.origin.url "https://token@github.com/dylan9538/parcialUnoDistribuidos.git"
 ```
 En el campo token añado el token generado en github.
 
-**2)subir archivos **
+**2)subir archivos**
 
 1)Creo el archivo si no existe.
 
