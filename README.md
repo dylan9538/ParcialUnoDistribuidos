@@ -90,13 +90,13 @@ Estos pasos se realizan dentro del servidor que será nuestro balanceador de car
 sudo -i
 ```
 
-**Empezamos dirigiendonos a la carpeta de los repositorios de yum, con el siguiente comando
+**Empezamos dirigiendonos a la carpeta de los repositorios de yum, con el siguiente comando**
 
 ```
 cd /etc/yum.repos.d
 ```
 
-**se debe de crear un file de repositorio para alojar Nginx
+**se debe de crear un file de repositorio para alojar Nginx**
 
 ```
 vi nginx.repo
