@@ -238,3 +238,10 @@ Dentro de este archivo especificamos todo el aprovisionamiento con lo siguiente:
 - Interfaces tipo puente
 - Declaración de cookbooks
 - Variables necesarias para plantillas 
+
+###Realización de cookbooks
+
+Dentro del directorio parcialUnoDistribuidos creamos un directorio cookbooks con tres directorio llamados:
+- balancer (Representa el balanceador de carga)
+- web (Representa los servidores web)
+- db (Representa la base de datos)
