@@ -245,3 +245,22 @@ Dentro del directorio parcialUnoDistribuidos creamos un directorio cookbooks con
 - balancer (Representa el balanceador de carga)
 - web (Representa los servidores web)
 - db (Representa la base de datos)
+
+Dentro de estas carpetas creamos un esquema de trabajo con las siguientes carpetas: 
+
+- Attributes
+- Files
+- Recipes 
+- Templates
+
+**Acontonuación se enseñara la automatización de cada una de las máquinas para que se cumplan con las especificaciones necesarias para que se presten los servicios solicitados** 
+
+**Primero con web**
+
+Dentro de la carpeta Attributes creamos un archivo default.rb con el siguiente texto:
+
+```
+
+```
+
+
