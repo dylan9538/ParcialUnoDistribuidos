@@ -132,16 +132,13 @@ worker_processes  1;
 events {
    worker_connections 1024;
 }
-
 http {
     upstream servers {
          server 192.168.131.93;
          server 192.168.131.94;
     }
-
     server {
         listen 8080;
-
         location / {
               proxy_pass http://servers;
         }
@@ -257,10 +254,12 @@ Dentro de estas carpetas creamos un esquema de trabajo con las siguientes carpet
 
 **Primero con web**
 
-Dentro de la carpeta Attributes creamos un archivo default.rb con el siguiente texto:
+Dentro de la carpeta Attributes creamos un archivo default.rb con el siguiente texto, que define la ip de la base de datos, como los valores user y password para acceder:
 
 ```
-
+default[:db][:ip] = '192.168.131.96'
+default[:wb][:user] = 'icesi'
+default[:wb][:pass] = '12345'
 ```
-
+Dentro del directorio Recipes 
 
