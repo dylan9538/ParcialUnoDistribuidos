@@ -261,5 +261,181 @@ default[:db][:ip] = '192.168.131.96'
 default[:wb][:user] = 'icesi'
 default[:wb][:pass] = '12345'
 ```
-Dentro del directorio Recipes 
+Dentro del directorio Recipes tenemos la receta llamada installweb.rb donde se descargan los paquetes necesarios y se hace la confiuración pertinenete para que el servidor web funcione correctamente:
+
+```
+package 'httpd'
+package 'php'
+package 'php-mysql'
+package 'mysql'
+
+service 'httpd' do
+  action [:enable, :start]
+end
+
+bash 'open port' do 
+ code <<-EOH
+  iptables -I INPUT 5 -p tcp -m state --state NEW -m tcp --dport 80 -j ACCEPT
+  service iptables save 
+    EOH
+end
+
+cookbook_file '/var/www/html/index.html' do
+ source 'index.html'
+ mode 0644
+end
+
+cookbook_file '/var/www/html/info.php' do
+ source 'info.php'
+ mode 0644
+end
+
+template '/var/www/html/select.php' do
+    source 'select.php.erb'
+    mode 0644
+    variables(
+      db_ip: node[:db][:ip],
+      wb_user: node[:wb][:user],
+      wb_pass: node[:wb][:pass]
+    )
+end
+```
+
+Tambien tenemos el archivo default.rb donde hacemos llamado a dicha receta:
+
+```
+include_recipe "web::installweb"
+```
+
+Dentro del directorio templates/default tenemos el archivo select.php.erb que consulta a la base de datos la información en ella y contiene el siguiente texto: 
+
+```
+<?php
+$con = mysql_connect("<%=@db_ip%>","<%=@wb_user%>","<%=@wb_pass%>");
+if (!$con)
+  {
+  die('Could not connect: ' . mysql_error());
+  }
+mysql_select_db("database1", $con);
+$result = mysql_query("SELECT * FROM example");
+
+while($row = mysql_fetch_array($result))
+  {
+  echo $row['name'] . " " . $row['age'];
+  echo "<br />";
+  }
+
+mysql_close($con);
+?>
+```
+
+Con esto ya tenemos la configuración necesaria para los servidores web.
+
+**Segundo con db**
+
+Brevemente definimos el contenido en cada uno de los directorios:
+
+En attributes tenemos en archivo default.rb con: 
+
+```
+default[:db][:password] = 'distribuidos'
+default[:wb][:ip1] = '192.168.131.93'
+default[:wb][:ip2] = '192.168.131.94'
+default[:db][:user] = 'icesi'
+default[:db][:pass] = '12345'
+```
+Definimos los componentes de acceso a la bd y las ip de los dos servidores web.
+
+En files/default definimos el archivo configure_mysql.sh donde esta configrada la instalación predetarminada para mysql, con el lo siguiente:
+
+```
+#!/usr/bin/expect -f 
+spawn /usr/bin/mysql_secure_installation
+expect ":" # Enter current password for root (enter for none):
+send -- "\r" 
+expect "n]" # Set root password? 
+send -- "y\r"
+expect ":" # New password:
+send -- "distribuidos\r"
+expect ":" # Re-enter new password:
+send -- "distribuidos\r"
+expect "n]" # Remove anonymous users? 
+send -- "n\r"
+expect "n]" # Disallow root login remotely?
+send -- "n\r"
+expect "n]" # Remove test database? 
+send -- "n\r"
+expect "n]" # Reload privilege tables now?
+send -- "y\r"
+expect eof
+```
+
+En las recetas en el directorio recipes tenemos el archivo installdb.rb con la configuración para la db y el default.rb que hace llamado a dicha receta, con el siguiente contenido respectivamente:
+
+```
+package 'mysql-server' 
+
+service 'mysqld' do 
+ action [:enable, :start]
+end
+
+bash 'openPort' do
+  code <<-EOH
+     iptables -I INPUT 5 -p tcp -m state --state NEW -m tcp --dport 3306 -j ACCEPT
+     service iptables save
+  EOH
+end
+
+package 'expect'
+
+cookbook_file '/tmp/configure_mysql.sh' do
+    source 'configure_mysql.sh'
+    mode 0711
+end
+
+bash 'configure mysql' do
+  cwd '/tmp'
+  code <<-EOH 
+  ./configure_mysql.sh
+  EOH
+end
+
+template '/tmp/create_schema.sql' do
+    source 'create_schema.sql.erb'
+    mode 0644
+    variables(
+      wb_ip: node[:db][:ip],
+      db_user: node[:db][:user],
+      db_pass: node[:db][:pass]
+    )
+end
+
+bash 'create schema' do
+ cwd '/tmp'
+ code <<-EOH
+ cat create_schema.sql | mysql -u root -pdistribuidos
+ EOH
+end
+```
+
+```
+include_recipe 'db::installdb'
+```
+
+Tenemos el archivo create_schema.sql.erb dentro del directorio templates/default con la definicion de todo el esquema de la base de datos:
+
+```
+CREATE database database1;
+USE database1;
+CREATE TABLE example(
+        id INT NOT NULL AUTO_INCREMENT, 
+        PRIMARY KEY(id),
+        name VARCHAR(30), 
+        age INT
+);
+INSERT INTO example (name,age) VALUES ('flanders',25);
+-- http://www.linuxhomenetworking.com/wiki/index.php/Quick_HOWTO_:_Ch34_:_Basic_MySQL_Configuration
+GRANT ALL PRIVILEGES ON *.* to '<%=@db_user%>'@'<%@wb_ip%>' IDENTIFIED by '<%=@db_pass%>';
+```
+
 
