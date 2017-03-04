@@ -163,9 +163,9 @@ Luego de ejecutar el comando anterior probamos en el browser si nuestro balancea
 
 ##AUTOMATIZACIÓN DE INFRAESTRUCTURA
 
-**Vagrantfile**
+**VAGRANT FILE**
 
-Para esta etapa se procede a explicar la creación y especificación del documento Vagrantfile. Dentro del directorio parcialUnoDistribuidos procedemos a crear el archivo con el nombre Vagrantfile y agregamos el siguiente texto:
+Para esta etapa se procede a explicar la creación y especificación del documento Vagrantfile. El archivo contiene toda la especificación de las máquinas que tendran los diversos papelas necesarios. Para los servidores web se requiere de mandar dos variables para que sean creadas en attributes y permitan cambiar la variable del nombre de las tablas en la base de datos, ya que ambas maquinas se crean con la misma configuración del cookbook, se debe hacer desde el vagrant por medio del chef.json. Dentro del directorio parcialUnoDistribuidos procedemos a crear el archivo con el nombre Vagrantfile y agregamos el siguiente texto:
 
 ```
 # -*- mode: ruby -*-
@@ -184,6 +184,12 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     end
     config.vm.provision :chef_solo do |chef|
       chef.cookbooks_path = "cookbooks"
+chef.json = {
+          "web" => {
+             "tabla" => 'equipos'
+          }
+      }
+
       chef.add_recipe "web"
     end
   end
@@ -197,7 +203,12 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     end
     config.vm.provision :chef_solo do |chef|
       chef.cookbooks_path = "cookbooks"
-      chef.add_recipe "web"
+     chef.json = {
+          "web" => {
+             "tabla" => 'equipos2'
+          }
+      }
+ chef.add_recipe "web"
     end
   end
 
@@ -226,6 +237,7 @@ config.vm.define :centos_db do |db|
       chef.add_recipe "db"
     end
   end
+
 end
 ```
 
@@ -252,16 +264,16 @@ Dentro de estas carpetas creamos un esquema de trabajo con las siguientes carpet
 
 **Acontonuación se enseñara la automatización de cada una de las máquinas para que se cumplan con las especificaciones necesarias para que se presten los servicios solicitados** 
 
-**Primero con web**
+**COOKBOOK web**
 
-Dentro de la carpeta Attributes creamos un archivo default.rb con el siguiente texto, que define la ip de la base de datos, como los valores user y password para acceder:
+Dentro de el directorio attributes creamos un archivo default.rb con el siguiente texto, que define la ip de la base de datos, como los valores user y password para acceder (Atributos que seran usados en otros archivos dentro de la máquina):
 
 ```
 default[:db][:ip] = '192.168.131.96'
 default[:wb][:user] = 'icesi'
 default[:wb][:pass] = '12345'
 ```
-Dentro del directorio Recipes tenemos la receta llamada installweb.rb donde se descargan los paquetes necesarios y se hace la confiuración pertinenete para que el servidor web funcione correctamente:
+Dentro del directorio recipes tenemos la receta llamada installweb.rb donde se descargan los paquetes necesarios y se hace la confiuración pertinenete para que el servidor web funcione correctamente. Se hace referencia al template index.php.erb que hace llamado a las dos tablas de la base de datos que se creara:
 
 ```
 package 'httpd'
@@ -280,19 +292,20 @@ bash 'open port' do
     EOH
 end
 
-cookbook_file '/var/www/html/index.html' do
- source 'index.html'
+template '/var/www/html/index.php' do
+ source 'index.php.erb'
  mode 0644
-end
-
-cookbook_file '/var/www/html/info.php' do
- source 'info.php'
- mode 0644
+ variables(
+      db_ip: node[:db][:ip],
+      wb_user: node[:wb][:user],
+      wb_pass: node[:wb][:pass],
+      tablename: node[:web][:tabla]    
+)
 end
 
 template '/var/www/html/select.php' do
     source 'select.php.erb'
-    mode 0644
+    mode 0777
     variables(
       db_ip: node[:db][:ip],
       wb_user: node[:wb][:user],
@@ -307,40 +320,49 @@ Tambien tenemos el archivo default.rb donde hacemos llamado a dicha receta:
 include_recipe "web::installweb"
 ```
 
-Dentro del directorio templates/default tenemos el archivo select.php.erb que consulta a la base de datos la información en ella y contiene el siguiente texto: 
+Dentro del directorio templates/default tenemos el archivo index.php.erb que consulta a la base de datos la información en ella. Este archivo es un html que tiene en si un codigo php. Contiene el siguiente texto: 
 
 ```
-<?php
-$con = mysql_connect("<%=@db_ip%>","<%=@wb_user%>","<%=@wb_pass%>");
-if (!$con)
-  {
-  die('Could not connect: ' . mysql_error());
-  }
-mysql_select_db("database1", $con);
-$result = mysql_query("SELECT * FROM example");
+<HTML>
+  <BODY>
+    <H1>lISTAS</H1>
+      <?php
+      $con = mysql_connect("<%=@db_ip%>","<%=@wb_user%>","<%=@wb_pass%>");
+      if (!$con)
+          {
+          die('Could not connect: ' . mysql_error());
+          }
+      mysql_select_db("bduno", $con);
+      $result = mysql_query("SELECT * FROM <%=@tablename%>");
 
-while($row = mysql_fetch_array($result))
-  {
-  echo $row['name'] . " " . $row['age'];
-  echo "<br />";
-  }
+      while($row = mysql_fetch_array($result))
+            {
+            echo $row['name'] . " " . $row['titulos'];
+            echo "<br />";
+            }
+       mysql_close($con);
+      ?>
+  </BODY>
+</HTML>
+```
 
-mysql_close($con);
-?>
+En el directorio files/default DEBEMOS de tener el archivo htaccess. El archivo htaccess (hypertext access) es un archivo de configuración muy popular en servidores web basados en Apache que permite a los administradores aplicar distintas políticas de acceso a directorios o archivos. Cuando se visita una página web y se pulsa sobre un enlace o se quiere descargar un archivo, en el proceso de trámite de la petición, el servidor web consulta el archivo htaccess con la idea de aplicar las directivas y restricciones definidas . Contiene la siguiente linea, que permite tener un php dentro de un html:
+
+```
+AddType php-script .php .htm .html
 ```
 
 Con esto ya tenemos la configuración necesaria para los servidores web.
 
-**Segundo con db**
+**COOKBOOK db**
 
 Brevemente definimos el contenido en cada uno de los directorios:
 
 En attributes tenemos en archivo default.rb con: 
 
 ```
-default[:db][:password] = 'distribuidos'
-default[:wb][:ip1] = '192.168.131.93'
-default[:wb][:ip2] = '192.168.131.94'
+default[:wb][:wb_ipOne] = '192.168.131.93'
+default[:wb][:wb_ipTwo] = '192.168.131.94'
 default[:db][:user] = 'icesi'
 default[:db][:pass] = '12345'
 ```
@@ -404,7 +426,8 @@ template '/tmp/create_schema.sql' do
     source 'create_schema.sql.erb'
     mode 0644
     variables(
-      wb_ip: node[:db][:ip],
+      wb_ipOne: node[:wb][:wb_ipOne],
+      wb_ipTwo: node[:wb][:wb_ipTwo],
       db_user: node[:db][:user],
       db_pass: node[:db][:pass]
     )
@@ -422,20 +445,129 @@ end
 include_recipe 'db::installdb'
 ```
 
-Tenemos el archivo create_schema.sql.erb dentro del directorio templates/default con la definicion de todo el esquema de la base de datos:
+
+Tenemos el archivo create_schema.sql.erb dentro del directorio templates/default con la definicion de todo el esquema de la base de datos. creamos una base de datos llamada bduno con dos tablas respectivamente, que SON LAS QUE SERVIRAN PARA DIFERENCIAR Y VERIFICAR QUE EL BALANCEADOR A REALIZAR FUNCIONE CORRECTAMENTE:
 
 ```
-CREATE database database1;
-USE database1;
-CREATE TABLE example(
+CREATE database bduno;
+USE bduno;
+CREATE TABLE equipos(
         id INT NOT NULL AUTO_INCREMENT, 
         PRIMARY KEY(id),
         name VARCHAR(30), 
-        age INT
+        titulos INT
 );
-INSERT INTO example (name,age) VALUES ('flanders',25);
+
+CREATE TABLE equipos2(
+        id INT NOT NULL AUTO_INCREMENT, 
+        PRIMARY KEY(id),
+        name VARCHAR(30), 
+        titulos INT
+);
+
+INSERT INTO equipos (name,titulos) VALUES ('Deportivo_cali',9);
+INSERT INTO equipos (name,titulos) VALUES ('America',13);
+INSERT INTO equipos (name,titulos) VALUES ('Nacional',15);
+INSERT INTO equipos (name,titulos) VALUES ('Millonarios',15);
+INSERT INTO equipos (name,titulos) VALUES ('Junior',6);
+INSERT INTO equipos (name,titulos) VALUES ('Santafe',8);
+
+INSERT INTO equipos2 (name,titulos) VALUES ('Barcelona',10);
+INSERT INTO equipos2 (name,titulos) VALUES ('Madrid',11);
+INSERT INTO equipos2 (name,titulos) VALUES ('PSG',12);
+INSERT INTO equipos2 (name,titulos) VALUES ('Bayern',13);
+INSERT INTO equipos2 (name,titulos) VALUES ('Chelsea',14);
+INSERT INTO equipos2 (name,titulos) VALUES ('Liverpool',15);
+
+
 -- http://www.linuxhomenetworking.com/wiki/index.php/Quick_HOWTO_:_Ch34_:_Basic_MySQL_Configuration
-GRANT ALL PRIVILEGES ON *.* to '<%=@db_user%>'@'<%@wb_ip%>' IDENTIFIED by '<%=@db_pass%>';
+GRANT ALL PRIVILEGES ON *.* to '<%=@db_user%>'@'<%=@wb_ipOne%>' IDENTIFIED by '<%=@db_pass%>';
+GRANT ALL PRIVILEGES ON *.* to '<%=@db_user%>'@'<%=@wb_ipTwo%>' IDENTIFIED by '<%=@db_pass%>';
+
 ```
 
+**COOKBOOK balancer**
+
+Brevemente definimos el contenido en cada uno de los directorios:
+
+En attributes tenemos en archivo default.rb con: 
+
+```
+default[:balancer][:ip_serverOne]='192.168.131.93'
+default[:balancer][:ip_serverTwo]='192.168.131.94'
+```
+Definimos las ip de los dos servidores web los cuales seran "balanceados".
+
+En files/default definimos el archivo nginx.repo donde esta configrada la instalación predeterminada para nginx, con lo siguiente:
+
+```
+[nginx]
+name=nginx repo
+baseurl=http://nginx.org/packages/centos/$releasever/$basearch/
+gpgcheck=0
+enabled=1
+```
+
+En el directorio recipes tenemos el archivo installbalancer.rb con la configuración para la instalación de nginx y el llamado al template y el default.rb que hace llamado a dicho recipe, con el siguiente contenido respectivamente:
+
+```
+bash 'open port' do
+  code <<-EOH
+  iptables -I INPUT 5 -p tcp -m state --state NEW -m tcp --dport 80 -j ACCEPT
+  iptables -I INPUT 5 -p tcp -m state --state NEW -m tcp --dport 8080 -j ACCEPT
+  service iptables save
+  EOH
+end
+
+cookbook_file '/etc/yum.repos.d/nginx.repo' do
+  source 'nginx.repo'
+end 
+
+package 'nginx'
+
+template '/etc/nginx/nginx.conf' do
+  source 'nginx.conf.erb'
+  variables(
+    ip_serverOne: node[:balancer][:ip_serverOne],
+    ip_serverTwo: node[:balancer][:ip_serverTwo]
+  )
+end
+
+service 'nginx' do
+  action :enable
+end
+
+service 'nginx' do
+  action :start
+end
+```
+
+```
+include_recipe 'balancer::installbalancer'
+```
+
+
+Dentro del directorio templates/default tenemos el archivo nginx.conf.erb donde defino el puerto por el que escucha el balanceador y las dos ip de los servidores web que el balanceador tendra en cuenta.
+
+```
+worker_processes  1;
+events {
+   worker_connections 1024;
+}
+http {
+    upstream servers {
+         server <%=@ip_serverOne%>;
+         server <%=@ip_serverTwo%>;
+    }
+    server {
+        listen 8080;
+        location / {
+              proxy_pass http://servers;
+        }
+    }
+}
+
+```
+
+**CON ESTO TODOS LOS COOKBOOKS QUEDAN TOTALMENTE TERMINADOS Y SE TIENE CONFIGURADO TODO PARA AUTOMATIZAR LA INFRAESTRUCTURA (BALANCEADOR, SERVIDORES WEB, BASE DE DATOS).
 
