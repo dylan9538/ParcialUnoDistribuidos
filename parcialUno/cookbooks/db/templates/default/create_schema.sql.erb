@@ -1,0 +1,35 @@
+CREATE database bduno;
+USE bduno;
+CREATE TABLE equipos(
+        id INT NOT NULL AUTO_INCREMENT, 
+        PRIMARY KEY(id),
+        name VARCHAR(30), 
+        titulos INT
+);
+
+CREATE TABLE equipos2(
+        id INT NOT NULL AUTO_INCREMENT, 
+        PRIMARY KEY(id),
+        name VARCHAR(30), 
+        titulos INT
+);
+
+INSERT INTO equipos (name,titulos) VALUES ('Deportivo_cali',9);
+INSERT INTO equipos (name,titulos) VALUES ('America',13);
+INSERT INTO equipos (name,titulos) VALUES ('Nacional',15);
+INSERT INTO equipos (name,titulos) VALUES ('Millonarios',15);
+INSERT INTO equipos (name,titulos) VALUES ('Junior',6);
+INSERT INTO equipos (name,titulos) VALUES ('Santafe',8);
+
+INSERT INTO equipos2 (name,titulos) VALUES ('Barcelona',10);
+INSERT INTO equipos2 (name,titulos) VALUES ('Madrid',11);
+INSERT INTO equipos2 (name,titulos) VALUES ('PSG',12);
+INSERT INTO equipos2 (name,titulos) VALUES ('Bayern',13);
+INSERT INTO equipos2 (name,titulos) VALUES ('Chelsea',14);
+INSERT INTO equipos2 (name,titulos) VALUES ('Liverpool',15);
+
+
+-- http://www.linuxhomenetworking.com/wiki/index.php/Quick_HOWTO_:_Ch34_:_Basic_MySQL_Configuration
+GRANT ALL PRIVILEGES ON *.* to '<%=@db_user%>'@'<%=@wb_ipOne%>' IDENTIFIED by '<%=@db_pass%>';
+GRANT ALL PRIVILEGES ON *.* to '<%=@db_user%>'@'<%=@wb_ipTwo%>' IDENTIFIED by '<%=@db_pass%>';
+
