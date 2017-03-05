@@ -569,5 +569,34 @@ http {
 
 ```
 
-**CON ESTO TODOS LOS COOKBOOKS QUEDAN TOTALMENTE TERMINADOS Y SE TIENE CONFIGURADO TODO PARA AUTOMATIZAR LA INFRAESTRUCTURA (BALANCEADOR, SERVIDORES WEB, BASE DE DATOS).
+**CON ESTO TODOS LOS COOKBOOKS QUEDAN TOTALMENTE TERMINADOS Y SE TIENE CONFIGURADO TODO PARA AUTOMATIZAR LA INFRAESTRUCTURA (BALANCEADOR, SERVIDORES WEB, BASE DE DATOS).**
 
+###PRUEBAS DE FUNCIONAMIENTO
+
+Cuando corremos y montamos nuestras máquinas aprovisionadas por medio del comando
+
+```
+vagrant up
+```
+
+Nos dirigimos al browser y digitamos la ip del balanceador en este caso la 192.168.131.95 junto con el puerto por el que escucha de la siguiente manera:
+
+```
+192.168.131.95:8080
+```
+
+Aparece la consulta a la base de datos de alguna de las dos tablas creadas en ella, y si refrescamos la página el balanceador cumplira su función y re dirigira a ambas páginas que consultan tablas diferentes, como lo muestran las siguientes imagenes.
+
+![alt tag](https://github.com/dylan9538/ParcialUnoDistribuidos/blob/master/Prueba_1.png)
+
+![alt tag](https://github.com/dylan9538/ParcialUnoDistribuidos/blob/master/Prueba_2.png)
+
+###PROBLEMAS ENCONTRADOS
+
+-- Uno de los problemas fue el de poder asociar HTML con PHP al momento de crear el index que se debia mostras en el browser. Como se dijo anteriormente dicho problema se soluciono creando el file htaccess en la explicación del cookbook web. 
+
+-- Otro problema era encontrar la forma de diferenciar o verificar que el servidor balancer cumpliera con su función para lo que se tivo que usar el chef.json donde se pasaban especificaciones de un valor para la consulta a la base de datos que permitia que en un servidor web se consultara una tabla y en otro servidor otra tabla. Dicha explicación esta mas clara dentro de la guía del Vagrantfile.
+
+-- Y no tanto un problema, un punto de demora fue encontrar una instalación correcta de nginx que fuera sencilla de automatizar,pero que igualmente esta explicita dentro de la documentación de nginx por lo que no fue tanto un problema aplicarla.
+
+##FIN
