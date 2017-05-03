@@ -7,7 +7,7 @@
 
 ****
 Estudiante | Código
---- | --- | ---
+
 Dylan Torres | A00265772
 ****
 
@@ -29,7 +29,7 @@ Se necesita realizar	el	aprovisionamiento	de	un	ambiente	compuesto	por:
 
 Se	debe probar	el	funcionamiento	del balanceador	a través	de	una	aplicación	web	que realice	 consultas	 a	 la	 base	 de	 datos	 a	 través	 de	 los servidores	 web (mostrar visualmente cual	servidor web atiende la	petición).
 
-##Pasos preliminares
+## Pasos preliminares
 
 Primeramente debemos de crear una subinterfaz de red para conectar el equipo con el mirror con el comando:
 ```
@@ -70,7 +70,7 @@ git add nombreArchivo
 git commit -m "upload README file"
 git push origin master
 ```
-##SOLUCION DEL PROBLEMA
+## SOLUCION DEL PROBLEMA
 
 Consignación de los comandos de linux necesarios para el aprovisionamiento de los servicios solicitados
 
@@ -161,7 +161,7 @@ service nginx start
 
 Luego de ejecutar el comando anterior probamos en el browser si nuestro balanceador de carga esta funcionando digitando la ip del balanceador y el puerto 8080. 
 
-##AUTOMATIZACIÓN DE INFRAESTRUCTURA
+## AUTOMATIZACIÓN DE INFRAESTRUCTURA
 
 **VAGRANT FILE**
 
@@ -591,7 +591,7 @@ Aparece la consulta a la base de datos de alguna de las dos tablas creadas en el
 
 ![alt tag](https://github.com/dylan9538/ParcialUnoDistribuidos/blob/master/Prueba_2.png)
 
-###PROBLEMAS ENCONTRADOS
+### PROBLEMAS ENCONTRADOS
 
 -- Uno de los problemas fue el de poder asociar HTML con PHP al momento de crear el index que se debia mostras en el browser. Como se dijo anteriormente dicho problema se soluciono creando el file htaccess en la explicación del cookbook web. 
 
@@ -599,4 +599,4 @@ Aparece la consulta a la base de datos de alguna de las dos tablas creadas en el
 
 -- Y no tanto un problema, un punto de demora fue encontrar una instalación correcta de nginx que fuera sencilla de automatizar,pero que igualmente esta explicita dentro de la documentación de nginx por lo que no fue tanto un problema aplicarla.
 
-##FIN
+## FIN
